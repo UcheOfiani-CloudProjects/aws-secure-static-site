@@ -1,31 +1,54 @@
-# Secure Static Site Deployment with Terraform
+# AWS Secure Static Website with Terraform
 
-This project demonstrates how to deploy a secure static website using AWS S3, CloudFront, and Terraform. The website is hosted on Amazon S3 with CloudFront as the Content Delivery Network (CDN) for faster performance. We also automate the deployment process with Terraform, making it scalable and reproducible.
+This project deploys a secure, highly available static website on AWS using **S3**, **CloudFront**, **Route 53**, and **ACM** — fully provisioned with **Terraform**.
 
-# Features
-Deploy a static website on AWS S3.
-Use CloudFront for a faster CDN (Content Delivery Network).
-Secure access with an S3 bucket policy for restricted access.
-No domain setup (optional).
-Modular Terraform configuration.
+---
 
-# Prerequisites
-Before running this project, make sure you have the following tools installed:
--Terraform: Install Terraform
--AWS CLI: Install AWS CLI
--AWS Account: Ensure you have an AWS account and have configured the AWS CLI with your credentials.
+## ✨ Features
 
-# Getting Started
--Clone the repository:
+- ✅ Host a static website using Amazon **S3**
+- ✅ Secure it with **CloudFront CDN**
+- ✅ Use **SSL/TLS** certificates from **AWS Certificate Manager**
+- ✅ Attach a custom domain with **Route 53**
+- ✅ Prevent public access to S3 via **OAC** (Origin Access Control)
+- ✅ Use Terraform for **Infrastructure as Code**
+
+---
+
+## Architecture
+
+- **S3**: Hosts static assets (HTML, CSS, JS)
+- **CloudFront**: Provides global CDN with HTTPS
+- **ACM**: Manages the SSL certificate
+- **Route 53**: Manages DNS records
+- **OAC**: Ensures S3 content is only accessible via CloudFront
+
+---
+
+## 📁 Project Structure
+
+```bash
+.
+├── main.tf                      # Core resources (S3, CloudFront, etc.)
+├── s3-website/
+│   └── index.html               # Static site content
+├── variables.tf                 # Input variables
+├── outputs.tf                  # Outputs like website URL
+└── terraform.tfvars            # Variable values
+```
+
+
+# Setup Steps
+- Clone the repo and navigate to the project directory:
 
 `git clone https://github.com/username/secure-static-site-terraform.git`
 
 `cd secure-static-site-terraform`
 
 # Initialize Terraform:
-Initialize your Terraform configuration to download the required providers and modules.
-
-`terraform init`
+```bash
+terraform init
+```
 
 # Review the Terraform configuration:
 Open the main.tf and cloudfront.tf files to review the configuration. You can adjust any settings such as bucket names, region, or resources as needed.
@@ -33,7 +56,9 @@ Open the main.tf and cloudfront.tf files to review the configuration. You can ad
 # Run Terraform plan:
 Generate an execution plan to review the changes Terraform will make to your infrastructure.
 
+```
 `terraform plan`
+```
 
 # Apply the changes:
 Apply the changes to create the AWS resources.
@@ -48,6 +73,36 @@ Once the terraform apply completes, Terraform will output the CloudFront URL whe
 -cloudfront.tf: Contains the CloudFront distribution setup.
 -variables.tf: Contains variables for S3 bucket name, region, etc.
 -outputs.tf: Displays the URL of the CloudFront distribution.
+
+### Issues Faced & How We Solved Them
+Issue: Bucket name conflict
+Cause: S3 bucket names are globally unique.
+Solution: Appended a random_id to ensure uniqueness:
+`bucket = "moe-static-site-${random_id.bucket_id.hex}"`
+
+Issue: Access Denied on CloudFront
+Cause: S3 bucket was private, and CloudFront didn't have permission.
+Solution: Used `aws_cloudfront_origin_access_control` (OAC) and attached it to CloudFront.
+
+Issue: HTTPS certificate not recognized
+Cause: Certificate was not in us-east-1, which CloudFront requires.
+Solution: Created ACM certificate in us-east-1 and referenced it in CloudFront.
+
+### Output
+After successful deployment, Terraform will output:
+-Static website URL (CloudFront distribution)
+-Bucket name
+-Hosted zone ID (if Route 53 is included)
+
+### Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+### Future Improvements
+
+Add CI/CD deployment via GitHub Actions
+Enable logging for CloudFront and S3
+Add error page (e.g., 404.html)
+
 
 # Resources
 -Terraform Documentation
