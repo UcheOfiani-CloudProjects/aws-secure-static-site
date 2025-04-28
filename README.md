@@ -16,13 +16,22 @@ This project deploys a secure, highly available static website on AWS using **S3
 ---
 
 ## Architecture
-
-- **S3**: Hosts static assets (HTML, CSS, JS)
-- **CloudFront**: Provides global CDN with HTTPS
-- **ACM**: Manages the SSL certificate
-- **Route 53**: Manages DNS records
-- **OAC**: Ensures S3 content is only accessible via CloudFront
-
+```mermaid
+graph TD;
+    A[S3 Bucket] --> B[CloudFront Distribution]
+    B --> C[ACM Certificate]
+    B --> D[Route 53]
+    A --> E[OAC - Origin Access Control]
+    E --> F[Block public access]
+    F --> A
+    D --> G[Custom Domain]
+    F --> G
+```
+- **S3**: Hosts the static assets such as HTML, CSS, and JS files.
+- **CloudFront**: Provides a global CDN for faster delivery and secures the site with HTTPS
+- **ACM**:  Manages the SSL certificate for secure HTTPS connections.
+- **Route 53**: Manages the DNS records for the custom domain.
+- **OAC**: Origin Access Control ensures that S3 content is only accessible via CloudFront, preventing direct access to the S3 bucket.
 ---
 
 ## 📁 Project Structure
@@ -40,74 +49,68 @@ This project deploys a secure, highly available static website on AWS using **S3
 
 # Setup Steps
 - Clone the repo and navigate to the project directory:
+```git clone https://github.com/username/secure-static-site-terraform.git```
 
-`git clone https://github.com/username/secure-static-site-terraform.git`
-
-`cd secure-static-site-terraform`
-
-# Initialize Terraform:
-```bash
-terraform init
-```
-
-# Review the Terraform configuration:
-Open the main.tf and cloudfront.tf files to review the configuration. You can adjust any settings such as bucket names, region, or resources as needed.
-
-# Run Terraform plan:
+```cd secure-static-site-terraform```
+- Initialize Terraform:
+```terraform init```
+- Review the Terraform configuration:
+Open the `main.tf` and `cloudfront.tf` files to review the configuration. You can adjust any settings such as bucket names, region, or resources as needed.
+-  Run Terraform plan:
 Generate an execution plan to review the changes Terraform will make to your infrastructure.
-
-```
-`terraform plan`
-```
-
-# Apply the changes:
+```terraform plan```
+-  Apply the changes:
 Apply the changes to create the AWS resources.
+```terraform apply```
+- Access your static site:
+Once the `terraform apply` completes, Terraform will output the CloudFront URL where your static site is hosted. You can access it using this URL.
 
-`terraform apply`
-
-# Access your static site:
-Once the terraform apply completes, Terraform will output the CloudFront URL where your static site is hosted. You can access it using this URL.
-
-# Files
--main.tf: Contains the S3 bucket configuration and website deployment.
--cloudfront.tf: Contains the CloudFront distribution setup.
--variables.tf: Contains variables for S3 bucket name, region, etc.
--outputs.tf: Displays the URL of the CloudFront distribution.
+## Files
+- `main.tf`: Contains the S3 bucket configuration and website deployment.
+- `cloudfront.tf`: Contains the CloudFront distribution setup.
+- `variables.tf`: Contains variables for S3 bucket name, region, etc.
+- `outputs.tf`: Displays the URL of the CloudFront distribution.
 
 ### Issues Faced & How We Solved Them
-Issue: Bucket name conflict
-Cause: S3 bucket names are globally unique.
-Solution: Appended a random_id to ensure uniqueness:
+- **Issue**: Bucket name conflict
+  
+- Cause: S3 bucket names are globally unique.
+  
+- Solution: Appended a random_id to ensure uniqueness:
 `bucket = "moe-static-site-${random_id.bucket_id.hex}"`
 
-Issue: Access Denied on CloudFront
-Cause: S3 bucket was private, and CloudFront didn't have permission.
-Solution: Used `aws_cloudfront_origin_access_control` (OAC) and attached it to CloudFront.
+- **Issue**: Access Denied on CloudFront
+  
+- Cause: S3 bucket was private, and CloudFront didn't have permission.
+  
+- Solution: Used `aws_cloudfront_origin_access_control` (OAC) and attached it to CloudFront.
 
-Issue: HTTPS certificate not recognized
-Cause: Certificate was not in us-east-1, which CloudFront requires.
-Solution: Created ACM certificate in us-east-1 and referenced it in CloudFront.
+- **Issue**: HTTPS certificate not recognized
+  
+- Cause: Certificate was not in us-east-1, which CloudFront requires.
+
+- Solution: Created ACM certificate in us-east-1 and referenced it in CloudFront.
 
 ### Output
 After successful deployment, Terraform will output:
--Static website URL (CloudFront distribution)
--Bucket name
--Hosted zone ID (if Route 53 is included)
+- Static website URL (CloudFront distribution)
+- Bucket name
+- Hosted zone ID (if Route 53 is included)
 
 ### Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ### Future Improvements
 
-Add CI/CD deployment via GitHub Actions
-Enable logging for CloudFront and S3
-Add error page (e.g., 404.html)
+- Add CI/CD deployment via GitHub Actions
+- Enable logging for CloudFront and S3
+- Add error page (e.g., 404.html)
 
 
 # Resources
--Terraform Documentation
--AWS S3 Documentation
--AWS CloudFront Documentation
+- Terraform Documentation
+- AWS S3 Documentation
+- AWS CloudFront Documentation
 
 # License
 This project is licensed under the MIT License - see the LICENSE file for details.
